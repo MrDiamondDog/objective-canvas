@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "module": "ES2022",
+        "target": "es2022",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true,
+        "moduleResolution": "node",
+        "declaration": true,
+        "declarationDir": "./dist/types",
+        "outDir": "./dist"
+    },
+    "include": ["**/*.ts"]
+}
