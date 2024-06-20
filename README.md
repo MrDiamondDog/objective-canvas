@@ -145,7 +145,7 @@ There will be better documentation soon, but for now this will be all of the fun
 
 ### Table of Contents
 - [Camera](#camera)
-- [Mouse](#mouse)
+- [Input](#input)
 - [Objects](#objects)
 - [Renderer](#renderer)
 - [Types](#types)
@@ -227,7 +227,7 @@ export const Camera: {
 };
 ```
 
-### Mouse
+### Input
 
 [Back to top](#documentation)
 
@@ -269,6 +269,20 @@ export const Mouse: {
      * The current object the mouse is selecting
      */
     selected: CanvasObject | undefined;
+};
+
+/**
+ * A representation of the current state of the keyboard
+ */
+export const Keyboard = {
+    /**
+     * The keys that are currently pressed
+     */
+    keys: {} as Record<string, boolean>,
+    /**
+     * The EventEmitter that handles all keyboard events on the canvas.
+     */
+    events: new EventEmitter()
 };
 ```
 
@@ -563,6 +577,28 @@ export type CanvasInitOptions = {
      * This can slow down the draw loop, so it is recommended to only enable this when needed.
      */
     profiler?: boolean;
+
+    /**
+     * Camera controls options
+     * Leave undefined to disable camera controls
+     */
+    cameraControls?: {
+        /**
+         * A function that returns whether or not the camera panning key is being pressed
+         * Default: left mouse button
+         */
+        moveButton?: () => boolean;
+        /**
+         * Allow zooming in and out with the mouse wheel
+         * Default: true
+         */
+        zoom?: boolean;
+        /**
+         * Allow panning with the mouse
+         * Default: true
+         */
+        panning?: boolean;
+    };
 };
 ```
 

@@ -279,4 +279,26 @@ export type CanvasInitOptions = {
      * This can slow down the draw loop, so it is recommended to only enable this when needed.
      */
     profiler?: boolean;
+
+    /**
+     * Camera controls options
+     * Leave undefined to disable camera controls
+     */
+    cameraControls?: {
+        /**
+         * A function that returns whether or not the camera panning key is being pressed
+         * Default: left mouse button
+         */
+        moveButton?: () => boolean;
+        /**
+         * Allow zooming in and out with the mouse wheel
+         * Default: true
+         */
+        zoom?: boolean;
+        /**
+         * Allow panning with the mouse
+         * Default: true
+         */
+        panning?: boolean;
+    }
 }

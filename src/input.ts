@@ -44,3 +44,17 @@ export const Mouse = {
      */
     selected: undefined as CanvasObject | undefined
 };
+
+/**
+ * A representation of the current state of the keyboard
+ */
+export const Keyboard = {
+    /**
+     * The keys that are currently pressed
+     */
+    keys: {} as Record<string, boolean>,
+    /**
+     * The EventEmitter that handles all keyboard events on the canvas.
+     */
+    events: new EventEmitter()
+};

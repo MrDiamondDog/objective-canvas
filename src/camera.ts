@@ -118,16 +118,3 @@ export const Camera = {
         ctx.restore();
     }
 };
-
-Mouse.events.on("move", () => {
-    if (Camera.locked) return;
-    if (Mouse.leftDown) {
-        Camera.moveTo(Vec2.diff(Camera.lookAt, Mouse.delta));
-    }
-});
-
-Mouse.events.on("wheel", (event: WheelEvent) => {
-    if (Camera.locked) return;
-
-    Camera.zoomTo(Math.min(Math.max(Camera.distance + event.deltaY, 100), 10000));
-});

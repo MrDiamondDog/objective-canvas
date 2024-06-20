@@ -1,7 +1,7 @@
 import { CanvasInitOptions, Vec2 } from "./types";
 
 import { Camera } from "./camera";
-import { Mouse } from "./input";
+import { Keyboard, Mouse } from "./input";
 import { objects } from "./object";
 import { line } from "./utils";
 
@@ -178,6 +178,23 @@ function addListeners() {
     resize();
     window.addEventListener("resize", resize);
 
+    if (canvasOptions.cameraControls) {
+        if (canvasOptions.cameraControls.panning)
+            Mouse.events.on("move", () => {
+                if (Camera.locked) return;
+                if (canvasOptions.cameraControls.moveButton?.() ?? Mouse.leftDown) {
+                    Camera.moveTo(Vec2.diff(Camera.lookAt, Mouse.delta));
+                }
+            });
+        
+        if (canvasOptions.cameraControls.zoom)
+            Mouse.events.on("wheel", (event: WheelEvent) => {
+                if (Camera.locked) return;
+            
+                Camera.zoomTo(Math.min(Math.max(Camera.distance + event.deltaY, 100), 10000));
+            });
+    }
+
     canvas.addEventListener("mousemove", (event: MouseEvent) => {
         const rect = canvas.getBoundingClientRect();
 
@@ -220,5 +237,19 @@ function addListeners() {
 
     canvas.addEventListener("wheel", (event: WheelEvent) => {
         Mouse.events.emit("wheel", event);
+    });
+
+    canvas.addEventListener("keydown", (event: KeyboardEvent) => {
+        Keyboard.keys[event.key] = true;
+        Keyboard.events.emit("down", event);
+    });
+
+    canvas.addEventListener("keyup", (event: KeyboardEvent) => {
+        Keyboard.keys[event.key] = false;
+        Keyboard.events.emit("up", event);
+    });
+
+    canvas.addEventListener("keypress", (event: KeyboardEvent) => {
+        Keyboard.events.emit("press", event);
     });
 }
