@@ -4,6 +4,10 @@
   "description": "An object-oriented canvas library",
   "main": "dist/index.js",
   "types": "dist/types/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MrDiamondDog/objective-canvas.git"
+  },
   "keywords": [
     "javascript",
     "typescript",
