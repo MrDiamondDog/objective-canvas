@@ -179,7 +179,7 @@ function addListeners() {
     window.addEventListener("resize", resize);
 
     if (canvasOptions.cameraControls) {
-        if (canvasOptions.cameraControls.panning)
+        if (canvasOptions.cameraControls.panning ?? true)
             Mouse.events.on("move", () => {
                 if (Camera.locked) return;
                 if (canvasOptions.cameraControls.moveButton?.() ?? Mouse.leftDown) {
@@ -187,7 +187,7 @@ function addListeners() {
                 }
             });
         
-        if (canvasOptions.cameraControls.zoom)
+        if (canvasOptions.cameraControls.zoom ?? true)
             Mouse.events.on("wheel", (event: WheelEvent) => {
                 if (Camera.locked) return;
             
@@ -233,6 +233,10 @@ function addListeners() {
 
     canvas.addEventListener("click", (event: MouseEvent) => {
         Mouse.events.emit("click", event);
+    });
+
+    canvas.addEventListener("contextmenu", (event: MouseEvent) => {
+        Mouse.events.emit("contextmenu", event);
     });
 
     canvas.addEventListener("wheel", (event: WheelEvent) => {
