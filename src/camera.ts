@@ -1,7 +1,5 @@
+import { Renderer } from "./renderer";
 import { Vec2, Viewport } from "./types";
-
-import { ctx } from ".";
-import { Mouse } from "./input";
 
 /**
  * Represents the Camera in the scene
@@ -51,22 +49,22 @@ export const Camera = {
      * Applies the camera transformation to the canvas context
      */
     apply: () => {
-        ctx.scale(Camera.viewport.scale.x, Camera.viewport.scale.y);
-        ctx.translate(-Camera.viewport.left, -Camera.viewport.top);
+        Renderer.ctx.scale(Camera.viewport.scale.x, Camera.viewport.scale.y);
+        Renderer.ctx.translate(-Camera.viewport.left, -Camera.viewport.top);
     },
     /**
      * Updates the viewport size and position based on the current camera settings
      */
     update: () => {
-        const aspectRatio = ctx.canvas.width / ctx.canvas.height;
+        const aspectRatio = Renderer.ctx.canvas.width / Renderer.ctx.canvas.height;
         Camera.viewport.width = Camera.distance * Math.tan(Camera.fov);
         Camera.viewport.height = Camera.viewport.width / aspectRatio;
         Camera.viewport.left = Camera.lookAt.x - (Camera.viewport.width / 2.0);
         Camera.viewport.top = Camera.lookAt.y - (Camera.viewport.height / 2.0);
         Camera.viewport.right = Camera.viewport.left + Camera.viewport.width;
         Camera.viewport.bottom = Camera.viewport.top + Camera.viewport.height;
-        Camera.viewport.scale.x = ctx.canvas.width / Camera.viewport.width;
-        Camera.viewport.scale.y = ctx.canvas.height / Camera.viewport.height;
+        Camera.viewport.scale.x = Renderer.ctx.canvas.width / Camera.viewport.width;
+        Camera.viewport.scale.y = Renderer.ctx.canvas.height / Camera.viewport.height;
     },
     /**
      * Moves the camera to a position
@@ -108,13 +106,13 @@ export const Camera = {
      * Begins the camera transformation
      */
     begin: () => {
-        ctx.save();
+        Renderer.ctx.save();
         Camera.apply();
     },
     /**
      * Ends the camera transformation
      */
     end: () => {
-        ctx.restore();
+        Renderer.ctx.restore();
     }
 };

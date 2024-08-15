@@ -1,5 +1,5 @@
+import { Renderer } from "./renderer";
 import { Vec2, Viewport } from "./types";
-import { ctx } from ".";
 
 /**
  * Draw a circle
@@ -8,10 +8,10 @@ import { ctx } from ".";
  * @param fill Whether to fill the circle
  */
 export function circle(pos: Vec2, radius: number, fill: boolean = true) {
-    ctx.beginPath();
-    ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI);
-    if (fill) ctx.fill();
-    else ctx.stroke();
+    Renderer.ctx.beginPath();
+    Renderer.ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI);
+    if (fill) Renderer.ctx.fill();
+    else Renderer.ctx.stroke();
 }
 
 /**
@@ -20,7 +20,7 @@ export function circle(pos: Vec2, radius: number, fill: boolean = true) {
  * @returns The width and height of the text
  */
 export function measureText(text: string): Vec2 {
-    const measure = ctx.measureText(text);
+    const measure = Renderer.ctx.measureText(text);
     return new Vec2(
         measure.width,
         measure.actualBoundingBoxAscent + measure.actualBoundingBoxDescent
@@ -55,13 +55,13 @@ export function inside(pos: Vec2, size: Vec2, pos2: Vec2) {
  * @param radius The radius of the rounded corners
  */
 export function roundRect(pos: Vec2, size: Vec2, radius: number = 8) {
-    ctx.beginPath();
-    ctx.moveTo(pos.x + radius, pos.y);
-    ctx.arcTo(pos.x + size.x, pos.y, pos.x + size.x, pos.y + size.y, radius);
-    ctx.arcTo(pos.x + size.x, pos.y + size.y, pos.x, pos.y + size.y, radius);
-    ctx.arcTo(pos.x, pos.y + size.y, pos.x, pos.y, radius);
-    ctx.arcTo(pos.x, pos.y, pos.x + size.x, pos.y, radius);
-    ctx.fill();
+    Renderer.ctx.beginPath();
+    Renderer.ctx.moveTo(pos.x + radius, pos.y);
+    Renderer.ctx.arcTo(pos.x + size.x, pos.y, pos.x + size.x, pos.y + size.y, radius);
+    Renderer.ctx.arcTo(pos.x + size.x, pos.y + size.y, pos.x, pos.y + size.y, radius);
+    Renderer.ctx.arcTo(pos.x, pos.y + size.y, pos.x, pos.y, radius);
+    Renderer.ctx.arcTo(pos.x, pos.y, pos.x + size.x, pos.y, radius);
+    Renderer.ctx.fill();
 }
 
 /**
@@ -70,10 +70,10 @@ export function roundRect(pos: Vec2, size: Vec2, radius: number = 8) {
  * @param to The ending point
  */
 export function line(from: Vec2, to: Vec2) {
-    ctx.beginPath();
-    ctx.moveTo(from.x, from.y);
-    ctx.lineTo(to.x, to.y);
-    ctx.stroke();
+    Renderer.ctx.beginPath();
+    Renderer.ctx.moveTo(from.x, from.y);
+    Renderer.ctx.lineTo(to.x, to.y);
+    Renderer.ctx.stroke();
 }
 
 /**
@@ -97,10 +97,10 @@ export function inLine(from: Vec2, to: Vec2, pos: Vec2) {
  */
 export function bezier(start: Vec2, end: Vec2, control?: Vec2) {
     const controlPos = control || new Vec2(start.x + (end.x - start.x) / 2, start.y + (end.y - start.y) / 2);
-    ctx.beginPath();
-    ctx.moveTo(start.x, start.y);
-    ctx.quadraticCurveTo(controlPos.x, controlPos.y, end.x, end.y);
-    ctx.stroke();
+    Renderer.ctx.beginPath();
+    Renderer.ctx.moveTo(start.x, start.y);
+    Renderer.ctx.quadraticCurveTo(controlPos.x, controlPos.y, end.x, end.y);
+    Renderer.ctx.stroke();
 }
 
 /**

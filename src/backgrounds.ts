@@ -1,7 +1,7 @@
 import { Vec2 } from "./types";
-import { ctx } from ".";
 import { Camera } from "./camera";
 import { line } from "./utils";
+import { Renderer } from "./renderer";
 
 /**
  * Styles for the background of the canvas
@@ -11,20 +11,20 @@ export const BackgroundStyles = {
      * A blank slate with a specified background color
      */
     empty: (backgroundColor = "#000000") => {
-        ctx.fillStyle = backgroundColor;
-        ctx.fillRect(Camera.viewport.left, Camera.viewport.top, Camera.viewport.width, Camera.viewport.height);
+        Renderer.ctx.fillStyle = backgroundColor;
+        Renderer.ctx.fillRect(Camera.viewport.left, Camera.viewport.top, Camera.viewport.width, Camera.viewport.height);
     },
 
     /**
      * A grid with a specified background color and line color
      */
     grid: (gridSize = 100, backgroundColor = "#000000", lineColor = "#1d1d1d") => {
-        ctx.fillStyle = backgroundColor;
-        ctx.fillRect(Camera.viewport.left, Camera.viewport.top, Camera.viewport.width, Camera.viewport.height);
+        Renderer.ctx.fillStyle = backgroundColor;
+        Renderer.ctx.fillRect(Camera.viewport.left, Camera.viewport.top, Camera.viewport.width, Camera.viewport.height);
 
-        ctx.fillStyle = lineColor;
-        ctx.strokeStyle = lineColor;
-        ctx.lineWidth = 0.5;
+        Renderer.ctx.fillStyle = lineColor;
+        Renderer.ctx.strokeStyle = lineColor;
+        Renderer.ctx.lineWidth = 0.5;
 
         // grid
         const gridOffset = {
@@ -40,7 +40,7 @@ export const BackgroundStyles = {
                 line(new Vec2(Camera.viewport.left, y), new Vec2(Camera.viewport.right, y));
             }
         } else {
-            ctx.lineWidth = 5;
+            Renderer.ctx.lineWidth = 5;
         }
     }
 }

@@ -150,6 +150,7 @@ There will be better documentation soon, but for now this will be all of the fun
 - [Renderer](#renderer)
 - [Types](#types)
 - [Utils](#utils)
+- [Debugging](#debugging)
 
 ### Camera
 
@@ -367,14 +368,6 @@ export let ctx: CanvasRenderingContext2D;
  * This should not be called manually
  */
 export function setCanvas(_canvas: HTMLCanvasElement): void;
-/**
- * Debug mode
- */
-export let DEBUG: boolean;
-/**
- * Profiler mode
- */
-export let PROFILER: boolean;
 /**
  * Frames per second
  */
@@ -671,4 +664,74 @@ export function randomStr(len: number): string;
  * If an object is visible given the current viewport.
  */
 export function isVisible(viewport: Viewport, pos: Vec2, size: Vec2): boolean;
+```
+
+### Debugging
+
+[Back to top](#documentation)
+
+```ts
+import { Mouse } from "./input";
+import { objects } from "./object";
+import { canvas, ctx, tps } from "./renderer";
+import { Vec2 } from "./types";
+import { line } from "./utils";
+
+/**
+ * Whether or not to enable the debug information
+ */
+export let DEBUG: boolean;
+
+/**
+ * Sets the debug state
+ */
+export function setDebug(debug: boolean);
+
+/**
+ * The debug information to display
+ */
+export const debugInfo: Array<() => string>;
+
+/**
+ * Draws the debug information to the screen
+ */
+export function drawDebug();
+
+/**
+ * Whether or not to enable the profiler
+ */
+export let PROFILER: boolean;
+
+/**
+ * Sets the profiler state
+ */
+export function setProfiler(profiler: boolean);
+
+/**
+ * The profiler data
+ * 
+ * You can add your own data to this object by adding a key and an empty array BEFORE initCanvas is called
+ * 
+ * ```js
+ * profilerData["my key"] = []; // must be before initCanvas
+ * initCanvas({ ... });
+ * 
+ * ...
+ * 
+ * addProfilerData("my key", 10);
+ * ```
+ */
+export const profilerData: Record<string, number[]>;
+
+/**
+ * Adds a data point to the profiler
+ * @param key The key to add the data to
+ * @param num The number to add
+ */
+export function addProfilerData(key: string, num: number);
+
+/**
+ * Draws the profiler data to the screen
+ */
+export function drawProfiler();
 ```

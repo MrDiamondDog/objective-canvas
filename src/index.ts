@@ -5,3 +5,4 @@ export * from "./object";
 export * from "./backgrounds";
 export * from "./types";
 export * from "./utils";
+export * from "./debugging";

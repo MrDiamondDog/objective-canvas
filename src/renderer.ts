@@ -3,89 +3,81 @@ import { CanvasInitOptions, Vec2 } from "./types";
 import { Camera } from "./camera";
 import { Keyboard, Mouse } from "./input";
 import { objects } from "./object";
-import { line } from "./utils";
+import EventEmitter from "./eventemitter";
+import { Debugging } from './debugging';
 
-/**
- * The current canvas instance
- */
-export let canvas: HTMLCanvasElement;
-/**
- * The current canvas context
- */
-export let ctx: CanvasRenderingContext2D;
+export const Renderer = {
+    /**
+     * The current canvas element
+     */
+    canvas: undefined as HTMLCanvasElement | undefined,
+    /**
+     * The current canvas context
+     */
+    ctx: undefined as CanvasRenderingContext2D | undefined,
 
-/**
- * Set the canvas and context
- * This should not be called manually
- */
-export function setCanvas(_canvas: HTMLCanvasElement) {
-    canvas = _canvas;
-    ctx = canvas.getContext("2d");
-}
+    /**
+     * Events in the renderer
+     * 
+     * Order of events:
+     * - beforeBackground
+     * - (background is drawn, camera transformations start)
+     * - beforeTick
+     * - (objects are ticked)
+     * - beforeDraw
+     * - (objects are drawn)
+     * - afterDraw
+     * - (camera transformations are applied)
+     * - afterCamera (can be used to draw UI)
+     */
+    events: new EventEmitter(),
 
-/**
- * Debug mode
- */
-export let DEBUG = false;
-/**
- * Profiler mode
- */
-export let PROFILER = false;
+    /**
+     * The current ticks per second
+     */
+    TPS: 0,
 
-const debugInfo: Array<() => string> = [
-    () => `Mouse: ${Mouse.pos.x}, ${Mouse.pos.y}`,
-    () => `World: ${Mouse.worldPos.x.toFixed(2)}, ${Mouse.worldPos.y.toFixed(2)}`,
-    () => `TPS: ${tps}`,
-    () => `Objects: ${objects.length}`
-];
+    /**
+     * The current options for this instance
+     */
+    options: {} as CanvasInitOptions,
 
-const profilerData: Record<string, number[]> = {
-    "main thread": [],
-    "tick": [],
-    "draw": []
-};
+    init(options: CanvasInitOptions) {
+        this.canvas = options.canvas;
+        this.ctx = this.canvas.getContext("2d");
 
-function addProfilerData(key: keyof typeof profilerData, num: number) {
-    profilerData[key].push(num);
-    if (profilerData[key].length > 50) {
-        profilerData[key].shift();
+        Camera.update();
+        this.addListeners();
+        this.draw();
+    },
+
+    resize() {
+        this.canvas.width = this.canvas.clientWidth;
+        this.canvas.height = this.canvas.clientHeight;
+        this.ctx.textBaseline = "top";
+        this.ctx.textAlign = "left";
     }
-}
-
-/**
- * Frames per second
- */
-export const FPS = 60;
-/**
- * The current options for this instance
- */
-export let canvasOptions: CanvasInitOptions;
-
-function resize() {
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
-    ctx.textBaseline = "top";
-    ctx.textAlign = "left";
 }
 
 let tpsStart = Date.now();
 let ticks = 0;
-/**
- * Ticks per second
- */
-export let tps = 0;
+
 
 function draw() {
-    if (PROFILER) var mainThreadStart = performance.now();
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (Debugging.profilerEnabled) var mainThreadStart = performance.now();
+    Renderer.ctx.clearRect(0, 0, Renderer.canvas.width, Renderer.canvas.height);
+
+    Renderer.events.emit("beforeBackground");
 
     Camera.begin();
-
-    canvasOptions.drawBackground?.();
-
+    Renderer.options.drawBackground?.();
     const prevSelected = Mouse.selected?.id ?? undefined;
 
-    if (PROFILER) var tickStart = performance.now();
+    // Ticking
+    if (Debugging.profilerEnabled) var tickStart = performance.now();
+
+    Renderer.events.emit("beforeTick");
+
     for (const object of objects) {
         object.tick();
     }
@@ -95,55 +87,39 @@ function draw() {
         Mouse.selected = undefined;
         Mouse.events.emit("select");
     }
-    if (PROFILER) addProfilerData("tick", performance.now() - tickStart);
+    if (Debugging.profilerEnabled) Debugging.addProfilerData("tick", performance.now() - tickStart);
 
-    if (PROFILER) var drawStart = performance.now();
+
+    if (Debugging.profilerEnabled) var drawStart = performance.now();
+
+    Renderer.events.emit("beforeDraw");
+
     for (const object of objects) {
         object.draw();
     }
-    if (PROFILER) addProfilerData("draw", performance.now() - drawStart);
+
+    Renderer.events.emit("afterDraw");
+    
+    if (Debugging.profilerEnabled) Debugging.addProfilerData("draw", performance.now() - drawStart);
+
 
     Camera.end();
 
-    if (DEBUG) {
-        ctx.fillStyle = "#000000";
-        ctx.fillRect(0, 0, 300, debugInfo.length * 30 + 5);
-        ctx.fillStyle = "#ffffff";
-        ctx.strokeStyle = "#ffffff";
-        ctx.font = "20px monospace";
-        for (let i = 0; i < debugInfo.length; i++) {
-            ctx.fillText(debugInfo[i](), 10, 10 + i * 30);
-        }
-    }
+    Renderer.events.emit("afterCamera");
 
-    if (PROFILER) {
-        let i = 0;
-        for (const [key, data] of Object.entries(profilerData)) {
-            const avg = data.reduce((a, b) => a + b, 0) / data.length;
-            ctx.fillStyle = "#000000";
-            ctx.fillRect(i * 500, canvas.height - 150, 500, 150);
-            ctx.fillStyle = "#ffffff";
-            ctx.fillText(`${key}: ${avg.toFixed(2)}ms`, i * 500 + 5, canvas.height - 145);
-
-            for (let j = 1; j < data.length; j++) {
-                ctx.fillStyle = "#ff0000";
-                line(Vec2.from(i * 500 + 500 / data.length * (j - 1), canvas.height - data[j - 1]), Vec2.from(i * 500 + 500 / data.length * j, canvas.height - data[j]));
-            }
-
-            i++;
-        }
-    }
+    if (Debugging.debugEnabled) Debugging.drawDebug();
+    if (Debugging.profilerEnabled) Debugging.drawProfiler();
 
     ticks++;
 
     // get tps
     const elapsed = Date.now() - tpsStart;
     if (elapsed >= 1000) {
-        tps = ticks;
+        Renderer.TPS = ticks;
         ticks = 0;
         tpsStart = Date.now();
     }
-    if (PROFILER) addProfilerData("main thread", performance.now() - mainThreadStart);
+    if (Debugging.profilerEnabled) Debugging.addProfilerData("main thread", performance.now() - mainThreadStart);
 
     // Using setTimeout allows you to unfocus this tab and still have it run
     // ...but setTimeout ends up being less accurate than requestAnimationFrame, meaning the TPS is all over the place
@@ -154,19 +130,19 @@ function draw() {
  * Initializes the canvas with the given options
  */
 export function initCanvas(options: CanvasInitOptions) {
-    canvasOptions = options;
-    if (options.debug) DEBUG = true;
+    Renderer.options = options;
+    if (options.debug) Debugging.debugEnabled = true;
     if (options.profiler) {
-        PROFILER = true;
+        Debugging.profilerEnabled = true;
 
-        for (const key in profilerData) {
+        for (const key in Debugging.profilerData) {
             for (let i = 0; i < 100; i++) {
-                profilerData[key][i] = 0;
+                Debugging.profilerData[key][i] = 0;
             }
         }
     }
 
-    setCanvas(options.canvas);
+    Renderer.canvas = options.canvas;
     addListeners();
 
     Camera.update();
@@ -175,19 +151,19 @@ export function initCanvas(options: CanvasInitOptions) {
 
 // Input listeners
 function addListeners() {
-    resize();
-    window.addEventListener("resize", resize);
+    Renderer.resize();
+    window.addEventListener("resize", Renderer.resize);
 
-    if (canvasOptions.cameraControls) {
-        if (canvasOptions.cameraControls.panning ?? true)
+    if (Renderer.options.cameraControls) {
+        if (Renderer.options.cameraControls.panning ?? true)
             Mouse.events.on("move", () => {
                 if (Camera.locked) return;
-                if (canvasOptions.cameraControls.moveButton?.() ?? Mouse.leftDown) {
+                if (Renderer.options.cameraControls.moveButton?.() ?? Mouse.leftDown) {
                     Camera.moveTo(Vec2.diff(Camera.lookAt, Mouse.delta));
                 }
             });
         
-        if (canvasOptions.cameraControls.zoom ?? true)
+        if (Renderer.options.cameraControls.zoom ?? true)
             Mouse.events.on("wheel", (event: WheelEvent) => {
                 if (Camera.locked) return;
             
@@ -195,8 +171,8 @@ function addListeners() {
             });
     }
 
-    canvas.addEventListener("mousemove", (event: MouseEvent) => {
-        const rect = canvas.getBoundingClientRect();
+    Renderer.canvas.addEventListener("mousemove", (event: MouseEvent) => {
+        const rect = Renderer.canvas.getBoundingClientRect();
 
         const oldPos = Mouse.pos.copy();
 
@@ -211,7 +187,7 @@ function addListeners() {
         Mouse.events.emit("move", event);
     });
 
-    canvas.addEventListener("mousedown", (event: MouseEvent) => {
+    Renderer.canvas.addEventListener("mousedown", (event: MouseEvent) => {
         if (event.button === 0) {
             Mouse.leftDown = true;
         } else if (event.button === 2) {
@@ -221,7 +197,7 @@ function addListeners() {
         Mouse.events.emit("down", event);
     });
 
-    canvas.addEventListener("mouseup", (event: MouseEvent) => {
+    Renderer.canvas.addEventListener("mouseup", (event: MouseEvent) => {
         if (event.button === 0) {
             Mouse.leftDown = false;
         } else if (event.button === 2) {
@@ -231,29 +207,29 @@ function addListeners() {
         Mouse.events.emit("up", event);
     });
 
-    canvas.addEventListener("click", (event: MouseEvent) => {
+    Renderer.canvas.addEventListener("click", (event: MouseEvent) => {
         Mouse.events.emit("click", event);
     });
 
-    canvas.addEventListener("contextmenu", (event: MouseEvent) => {
+    Renderer.canvas.addEventListener("contextmenu", (event: MouseEvent) => {
         Mouse.events.emit("contextmenu", event);
     });
 
-    canvas.addEventListener("wheel", (event: WheelEvent) => {
+    Renderer.canvas.addEventListener("wheel", (event: WheelEvent) => {
         Mouse.events.emit("wheel", event);
     });
 
-    canvas.addEventListener("keydown", (event: KeyboardEvent) => {
+    Renderer.canvas.addEventListener("keydown", (event: KeyboardEvent) => {
         Keyboard.keys[event.key] = true;
         Keyboard.events.emit("down", event);
     });
 
-    canvas.addEventListener("keyup", (event: KeyboardEvent) => {
+    Renderer.canvas.addEventListener("keyup", (event: KeyboardEvent) => {
         Keyboard.keys[event.key] = false;
         Keyboard.events.emit("up", event);
     });
 
-    canvas.addEventListener("keypress", (event: KeyboardEvent) => {
+    Renderer.canvas.addEventListener("keypress", (event: KeyboardEvent) => {
         Keyboard.events.emit("press", event);
     });
 }
