@@ -43,12 +43,23 @@ export const Renderer = {
     options: {} as CanvasInitOptions,
 
     init(options: CanvasInitOptions) {
-        this.canvas = options.canvas;
-        this.ctx = this.canvas.getContext("2d");
-
+        Renderer.options = options;
+        if (options.debug) Debugging.debugEnabled = true;
+        if (options.profiler) {
+            Debugging.profilerEnabled = true;
+    
+            for (const key in Debugging.profilerData) {
+                for (let i = 0; i < 100; i++) {
+                    Debugging.profilerData[key][i] = 0;
+                }
+            }
+        }
+    
+        Renderer.canvas = options.canvas;
+        addListeners();
+    
         Camera.update();
-        this.addListeners();
-        this.draw();
+        draw();
     },
 
     resize() {
@@ -124,29 +135,6 @@ function draw() {
     // Using setTimeout allows you to unfocus this tab and still have it run
     // ...but setTimeout ends up being less accurate than requestAnimationFrame, meaning the TPS is all over the place
     requestAnimationFrame(draw);
-}
-
-/**
- * Initializes the canvas with the given options
- */
-export function initCanvas(options: CanvasInitOptions) {
-    Renderer.options = options;
-    if (options.debug) Debugging.debugEnabled = true;
-    if (options.profiler) {
-        Debugging.profilerEnabled = true;
-
-        for (const key in Debugging.profilerData) {
-            for (let i = 0; i < 100; i++) {
-                Debugging.profilerData[key][i] = 0;
-            }
-        }
-    }
-
-    Renderer.canvas = options.canvas;
-    addListeners();
-
-    Camera.update();
-    draw();
 }
 
 // Input listeners
